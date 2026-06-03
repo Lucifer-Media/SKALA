@@ -1,0 +1,42 @@
+# Java
+target/
+*.jar
+*.class
+*.war
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 1C JARs (подкладываются вручную)
+skala-server/lib/
+
+# Build artifacts в static
+skala-server/src/main/resources/static/assets/
+skala-server/src/main/resources/static/index.html

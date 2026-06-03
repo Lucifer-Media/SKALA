@@ -1,0 +1,42 @@
+[Unit]
+Description=СКАЛА — Система Контроля и Администрирования Ландшафта 1С
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=skala
+Group=skala
+WorkingDirectory=/opt/skala
+
+# Переменные окружения (не хранить секреты прямо здесь — используйте EnvironmentFile)
+EnvironmentFile=/etc/skala/skala.env
+
+ExecStart=/usr/bin/java \
+  -Xms256m -Xmx768m \
+  -XX:+UseContainerSupport \
+  -Djava.security.egd=file:/dev/./urandom \
+  -jar /opt/skala/skala-server.jar
+
+# Перезапуск при сбое (но не при нормальном завершении)
+Restart=on-failure
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Журнал
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=skala
+
+# Безопасность (совместимо с Astra Linux и Ubuntu)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/skala /var/log/skala
+
+# Таймаут остановки
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

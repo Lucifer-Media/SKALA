@@ -1,0 +1,66 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: skala-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       skala
+      POSTGRES_USER:     skala
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-skala_secret_change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skala"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  skala:
+    image: skala-server:latest
+    container_name: skala-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     skala
+      DB_USER:     skala
+      DB_PASSWORD: ${DB_PASSWORD:-skala_secret_change_me}
+      JWT_SECRET:  ${JWT_SECRET:-change-this-secret-min-32-characters!}
+      LOG_DIR:     /var/log/skala
+    ports:
+      - "8090:8090"
+    volumes:
+      - skala_logs:/var/log/skala
+      # Монтируйте 1С JARs если есть: - ./lib:/app/lib:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Опционально: VictoriaMetrics для хранения метрик ОС
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.101.0
+    container_name: skala-victoriametrics
+    restart: unless-stopped
+    command:
+      - "-retentionPeriod=90d"
+      - "-storageDataPath=/storage"
+    volumes:
+      - vm_data:/storage
+    ports:
+      - "127.0.0.1:8428:8428"
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  skala_logs:
+  vm_data:
